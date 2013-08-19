@@ -13,16 +13,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Align;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -42,22 +46,25 @@ public class BigThought extends Activity {
 	final int PHOTO_PICKED = 4;
 	private Uri picUri;
 	private EditText inputEditText;
-	//private Bitmap uploadPic;
+
+	// private Bitmap uploadPic;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
 		try {
-			File testFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-					+"/BigThoughtPhoto");
+			File testFolder = new File(
+					Environment
+							.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+							+ "/BigThoughtPhoto");
 			testFolder.mkdirs();
 			// VERY IMPORTANT
 			testFolder.canRead();
-		}catch(Exception e){
+		} catch (Exception e) {
 			Toast.makeText(this, "Screw it", Toast.LENGTH_LONG).show();
 		}
-		
+
 		Button openButton = (Button) findViewById(R.id.openButton);
 		openButton.setOnClickListener(openButtonOnClickListener);
 
@@ -66,10 +73,10 @@ public class BigThought extends Activity {
 
 		Button cameraButton = (Button) findViewById(R.id.cameraButton);
 		cameraButton.setOnClickListener(cameraButtonOnClickListener);
-		
+
 		inputEditText = (EditText) findViewById(R.id.inputEditText);
 		inputEditText.setOnClickListener(inputEditTextOnClickListener);
-		//inputEditText.setText("Insert your deep thought here");
+		// inputEditText.setText("Insert your deep thought here");
 	}
 
 	public OnClickListener openButtonOnClickListener = new OnClickListener() {
@@ -86,7 +93,7 @@ public class BigThought extends Activity {
 	};
 
 	public OnClickListener inputEditTextOnClickListener = new OnClickListener() {
-		
+
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
@@ -94,7 +101,7 @@ public class BigThought extends Activity {
 			inputEditText.setTextColor(0xFF000000);
 		}
 	};
-	
+
 	public OnClickListener cameraButtonOnClickListener = new OnClickListener() {
 
 		@Override
@@ -120,20 +127,20 @@ public class BigThought extends Activity {
 	};
 
 	private void share() {
-		 Intent sharingIntent = new
-		 Intent(android.content.Intent.ACTION_SEND);
-		
-		 //Bitmap sharePic;
-		 String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-					+"/BigThoughtPhoto/toShare.png";
-		 File sharePic=new File(path);
-		 Uri uri = Uri.fromFile(sharePic);
-		
-		 sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
-		 "Subject here");
-		 sharingIntent.putExtra(android.content.Intent.EXTRA_STREAM, uri);
-		 sharingIntent.setType("image/*");
-		 startActivity(Intent.createChooser(sharingIntent, "Share via"));
+		Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+
+		// Bitmap sharePic;
+		String path = Environment
+				.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+				+ "/BigThoughtPhoto/toShare.png";
+		File sharePic = new File(path);
+		Uri uri = Uri.fromFile(sharePic);
+
+		sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+				"Subject here");
+		sharingIntent.putExtra(android.content.Intent.EXTRA_STREAM, uri);
+		sharingIntent.setType("image/*");
+		startActivity(Intent.createChooser(sharingIntent, "Share via"));
 
 	}
 
@@ -151,12 +158,13 @@ public class BigThought extends Activity {
 		else if (requestCode == PIC_CROP) {
 			// get the returned data
 			Uri picUri = Uri.fromFile(getTempFile());
-			String mText=inputEditText.getText().toString();
-//			Bundle extras = data.getExtras();
+			String mText = inputEditText.getText().toString();
+			// Bundle extras = data.getExtras();
 			// get the cropped bitmap
-			Bitmap thePic=null;
+			Bitmap thePic = null;
 			try {
-				thePic = MediaStore.Images.Media.getBitmap(this.getContentResolver(), picUri);
+				thePic = MediaStore.Images.Media.getBitmap(
+						this.getContentResolver(), picUri);
 			} catch (FileNotFoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -172,10 +180,12 @@ public class BigThought extends Activity {
 			CharSequence s = DateFormat
 					.format("MM-dd-yy hh:mm:ss", d.getTime());
 			String fileName = "/" + s.toString() + ".png";
-			String sharePic= "/toShare.png";
+			String sharePic = "/toShare.png";
 			try {
-				File testFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-						+"/BigThoughtPhoto");
+				File testFolder = new File(
+						Environment
+								.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+								+ "/BigThoughtPhoto");
 				testFolder.mkdirs();
 				// VERY IMPORTANT
 				testFolder.canRead();
@@ -199,6 +209,7 @@ public class BigThought extends Activity {
 			ImageView picView = (ImageView) findViewById(R.id.imageView1);
 			// display the returned cropped image
 			picView.setImageBitmap(bmp);
+
 		}
 
 		else if (requestCode == CAMERA_CAPTURE) {
@@ -244,8 +255,10 @@ public class BigThought extends Activity {
 
 	private File getTempFile() {
 		if (isSDCARDMounted()) {
-			File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-					+"/BigThoughtPhoto/temp.tmp");
+			File f = new File(
+					Environment
+							.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+							+ "/BigThoughtPhoto/temp.tmp");
 			try {
 				f.createNewFile();
 			} catch (IOException e) {
@@ -267,10 +280,10 @@ public class BigThought extends Activity {
 	}
 
 	public Bitmap postProcessing(Context mContext, Bitmap bitmap, String mText) {
-		int canvasSize=530;
-		int margin=15;
-		int fontSize=24;
-		Typeface fontFormat=Typeface.create("Helvetica", Typeface.BOLD);
+		int canvasSize = 530;
+		int margin = 15;
+		int fontSize = 30;
+		Typeface fontFormat = Typeface.create("Helvetica", Typeface.BOLD);
 		try {
 			Resources resources = mContext.getResources();
 			float scale = resources.getDisplayMetrics().density;
@@ -284,7 +297,11 @@ public class BigThought extends Activity {
 			// so we need to convert it to mutable one
 
 			bitmap = bitmap.copy(bitmapConfig, true);
-			//bitmap=vintage(bitmap);
+			// bitmap = BitmapFactory.decodeResource(this.getResources(),
+			// R.drawable.noise);
+			bitmap = colorBlend(bitmap);
+			bitmap=addNoise(bitmap);
+			bitmap=addVignete(bitmap);
 			// Test frame
 			Bitmap frame = Bitmap.createBitmap(canvasSize, canvasSize,
 					Bitmap.Config.ARGB_8888);
@@ -299,19 +316,30 @@ public class BigThought extends Activity {
 			// text color - #3D3D3D
 			paint.setColor(getResources().getColor(R.color.light));
 			// text size in pixels
-			paint.setTextSize((int) (fontSize * scale));
-			paint.setAlpha(100);
+			
+			paint.setAlpha(255);
 			paint.setTypeface(fontFormat);
+			paint.setTextAlign(Align.CENTER);
 			// text shadow
-			// paint.setShadowLayer(1f, 0f, 1f, Color.DKGRAY);
+			paint.setShadowLayer(1f, 0f, 1f, Color.DKGRAY);
 
 			// draw text to the Canvas center
 			Rect bounds = new Rect();
 			paint.getTextBounds(mText, 0, mText.length(), bounds);
+			Log.d("value", String.valueOf(bounds.width())+"h: "+String.valueOf(bitmap.getHeight())+"w: "+String.valueOf(bitmap.getWidth()));
+			
+			double width_factor=180.0/bounds.width();
+			double height_factor=50.0/bounds.height();
+			double factor=Math.min(width_factor, height_factor);
+			if(factor>1){
+				factor=1;
+			}
+			Log.d("code", String.valueOf(factor)+":"+ String.valueOf(paint.getTextSize()));
+			paint.setTextSize((int) (fontSize *factor));
 			int x = (bitmap.getWidth() - bounds.width()) / 6;
 			int y = (bitmap.getHeight() + bounds.height()) / 5;
 
-			canvas.drawText(mText, x * scale, y * scale, paint);
+			canvas.drawText(mText, 265, 175, paint);
 
 			return frame;
 		} catch (Exception e) {
@@ -324,34 +352,115 @@ public class BigThought extends Activity {
 
 	public Bitmap vintage(Bitmap source) {
 		// get image size
-		int COLOR_MIN=0x00;
-		int COLOR_MAX=0xFF;
-		
-	    int width = source.getWidth();
-	    int height = source.getHeight();
-	    int[] pixels = new int[width * height];
-	    // get pixel array from source
-	    source.getPixels(pixels, 0, width, 0, 0, width, height);
-	    // a random object
-	    Random random = new Random();
+		int COLOR_MIN = 0x00;
+		int COLOR_MAX = 0xFF;
 
-	    int index = 0;
-	    // iteration through pixels
-	    for(int y = 0; y < height; ++y) {
-	        for(int x = 0; x < width; ++x) {
-	            // get current index in 2D-matrix
-	            index = y * width + x;
-	            // get random color
-	            int randColor = Color.rgb(random.nextInt(COLOR_MAX),
-	                    random.nextInt(COLOR_MAX), random.nextInt(COLOR_MAX));
-	            // OR
-	            pixels[index] |= randColor;
-	        }
-	    }
-	    // output bitmap
-	    Bitmap bmOut = Bitmap.createBitmap(width, height, source.getConfig());
-	    bmOut.setPixels(pixels, 0, width, 0, 0, width, height);
-	    return bmOut;
+		int width = source.getWidth();
+		int height = source.getHeight();
+		int[] pixels = new int[width * height];
+		// get pixel array from source
+		source.getPixels(pixels, 0, width, 0, 0, width, height);
+		// a random object
+		Random random = new Random();
+
+		int index = 0;
+		// iteration through pixels
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				// get current index in 2D-matrix
+				index = y * width + x;
+				// get random color
+				int randColor = Color.rgb(random.nextInt(COLOR_MAX),
+						random.nextInt(COLOR_MAX), random.nextInt(COLOR_MAX));
+				// OR
+				pixels[index] |= randColor;
+			}
+		}
+		// output bitmap
+		Bitmap bmOut = Bitmap.createBitmap(width, height, source.getConfig());
+		bmOut.setPixels(pixels, 0, width, 0, 0, width, height);
+		return bmOut;
+	}
+
+	public Bitmap addNoise(Bitmap source) {
+		// MUST create folder drawable
+		Bitmap filterImage = BitmapFactory.decodeResource(this.getResources(),
+				R.drawable.noise);
+		Bitmap frame = Bitmap.createBitmap(source);
+		Canvas canvas = new Canvas(frame);
+		Paint maskNoise = new Paint();
+		maskNoise.setAlpha(50);
+		canvas.drawBitmap(filterImage, 0, 0, maskNoise);
+		return frame;
+	}
+
+	public Bitmap addVignete(Bitmap source) {
+		Bitmap filterImage = BitmapFactory.decodeResource(this.getResources(),
+				R.drawable.mask);
+		Bitmap frame = Bitmap.createBitmap(source);
+		Canvas canvas = new Canvas(frame);
+		Paint mask = new Paint();
+		mask.setAlpha(120);
+		canvas.drawBitmap(filterImage, 0, 0, mask);
+		return frame;
+	}
+
+	public Bitmap colorBlend(Bitmap source) {
+		int[] rValue = { 52, 53, 54, 59,
+				73, 101, 134, 164,
+				186, 205, 219, 231,
+				240, 245, 249, 250, 255 };
+		int[] gValue = { 45, 51, 64, 79,
+				97, 117, 137, 155,
+				170, 182, 194, 202,
+				210, 215, 218, 250, 255 };
+		int[] bValue = { 96, 102, 108, 115,
+				124, 133, 141, 146,
+				156, 159, 166,	170,
+				172, 175, 176, 177, 255 };
+
+		for (int i = 0; i < 500; i++) {
+			for (int j = 0; j < 500; j++) {
+				int p = source.getPixel(i, j);
+				//Log.d("pointvalue", String.valueOf(p));
+				int R = (p >> 16) & 0xff;
+				int G = (p >> 8) & 0xff;
+				int B = p & 0xff;
+//				if (true) {
+//					Log.d("value", String.valueOf(R) + String.valueOf(G)
+//							+ String.valueOf(B));
+//				}
+				// red channel
+				int r = (rValue[R / 16 + 1] - rValue[R / 16]) * (R % 16) / 16
+						+ rValue[R / 16];
+				int g = (gValue[G / 16 + 1] - gValue[G / 16]) * (G % 16) / 16
+						+ gValue[G / 16];
+				int b = (bValue[B / 16 + 1] - bValue[B / 16]) * (B % 16) / 16
+						+ bValue[B / 16];
+//				if (true) {
+//					Log.d("code", String.valueOf(r) + String.valueOf(g)
+//							+ String.valueOf(b));
+//				}
+				int color = Color.argb(255, r, g, b);
+				source.setPixel(i, j, color);
+			}
+		}
+		return source;
+	}
+
+	public int transformRed(int Rxy, int x, int y) {
+
+		return Rxy;
+	}
+
+	public static Bitmap applyGaussianBlur(Bitmap src) {
+		double[][] GaussianBlurConfig = new double[][] { { 1, 2, 1 },
+				{ 2, 4, 2 }, { 1, 2, 1 } };
+		ConvolutionMatrix convMatrix = new ConvolutionMatrix(3);
+		convMatrix.applyConfig(GaussianBlurConfig);
+		convMatrix.Factor = 16;
+		convMatrix.Offset = 0;
+		return ConvolutionMatrix.computeConvolution3x3(src, convMatrix);
 	}
 
 	@Override
@@ -361,6 +470,5 @@ public class BigThought extends Activity {
 		return true;
 	}
 
-
-//	
+	//
 }
