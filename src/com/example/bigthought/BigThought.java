@@ -152,14 +152,14 @@ public class BigThought extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 
-		if (requestCode == RESULT_LOAD_IMAGE) {
+		if (requestCode == RESULT_LOAD_IMAGE && resultCode==RESULT_OK) {
 			// get the Uri for the captured image
 			picUri = data.getData();
 			// carry out the crop operation
 			crop(picUri);
 		}
 		// user is returning from cropping the image
-		else if (requestCode == PIC_CROP) {
+		else if (requestCode == PIC_CROP && resultCode==RESULT_OK) {
 			// get the returned data
 			Uri picUri = Uri.fromFile(getTempFile());
 			String mText = inputEditText.getText().toString();
@@ -216,7 +216,7 @@ public class BigThought extends Activity {
 
 		}
 
-		else if (requestCode == CAMERA_CAPTURE) {
+		else if (requestCode == CAMERA_CAPTURE && resultCode==RESULT_OK) {
 			// get the Uri for the captured image
 			picUri = data.getData();
 			// carry out the crop operation
