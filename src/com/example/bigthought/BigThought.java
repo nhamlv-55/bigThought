@@ -190,6 +190,7 @@ public class BigThought extends Activity {
 				// VERY IMPORTANT
 				testFolder.canRead();
 				try {
+					MediaStore.Images.Media.insertImage(getContentResolver(), bmp, s.toString() + " My tit.png" , "le");
 					FileOutputStream out = new FileOutputStream(
 							testFolder.getAbsolutePath() + fileName);
 					bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
@@ -384,8 +385,7 @@ public class BigThought extends Activity {
 
 	public Bitmap addNoise(Bitmap source) {
 		// MUST create folder drawable
-		Bitmap filterImage = BitmapFactory.decodeResource(this.getResources(),
-				R.drawable.noise);
+		Bitmap filterImage = BitmapFactory.decodeResource(this.getResources(),R.drawable.noise);
 		Bitmap frame = Bitmap.createBitmap(source);
 		Canvas canvas = new Canvas(frame);
 		Paint maskNoise = new Paint();
