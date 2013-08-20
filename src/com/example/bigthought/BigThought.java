@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Random;
 
+import com.example.bigthought.R.drawable;
+
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -18,6 +20,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -300,7 +304,7 @@ public class BigThought extends Activity {
 			// bitmap = BitmapFactory.decodeResource(this.getResources(),
 			// R.drawable.noise);
 			bitmap = colorBlend(bitmap);
-			bitmap=addNoise(bitmap);
+			//bitmap=addNoise(bitmap);
 			bitmap=addVignete(bitmap);
 			// Test frame
 			Bitmap frame = Bitmap.createBitmap(canvasSize, canvasSize,
@@ -384,25 +388,31 @@ public class BigThought extends Activity {
 
 	public Bitmap addNoise(Bitmap source) {
 		// MUST create folder drawable
-		Bitmap filterImage = BitmapFactory.decodeResource(this.getResources(),
-				R.drawable.noise);
-		Bitmap frame = Bitmap.createBitmap(source);
-		Canvas canvas = new Canvas(frame);
-		Paint maskNoise = new Paint();
-		maskNoise.setAlpha(50);
-		canvas.drawBitmap(filterImage, 0, 0, maskNoise);
-		return frame;
+		Bitmap original = source;
+        Bitmap mask = BitmapFactory.decodeResource(getResources(),drawable.noise);
+        Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),Bitmap.Config.ARGB_8888);
+        Canvas mCanvas = new Canvas(result);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        //Useable mode: Overlay, multiply
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.OVERLAY));
+        mCanvas.drawBitmap(original, 0, 0, null);
+        mCanvas.drawBitmap(mask, 0, 0, paint);
+        paint.setXfermode(null);
+        return result;
 	}
 
 	public Bitmap addVignete(Bitmap source) {
-		Bitmap filterImage = BitmapFactory.decodeResource(this.getResources(),
-				R.drawable.mask);
-		Bitmap frame = Bitmap.createBitmap(source);
-		Canvas canvas = new Canvas(frame);
-		Paint mask = new Paint();
-		mask.setAlpha(120);
-		canvas.drawBitmap(filterImage, 0, 0, mask);
-		return frame;
+		Bitmap original = source;
+        Bitmap mask = BitmapFactory.decodeResource(getResources(),drawable.mask);
+        Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),Bitmap.Config.ARGB_8888);
+        Canvas mCanvas = new Canvas(result);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        //Useable mode: Overlay, multiply
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.OVERLAY));
+        mCanvas.drawBitmap(original, 0, 0, null);
+        mCanvas.drawBitmap(mask, 0, 0, paint);
+        paint.setXfermode(null);
+        return result;
 	}
 
 	public Bitmap colorBlend(Bitmap source) {
