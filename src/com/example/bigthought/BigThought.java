@@ -20,7 +20,6 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -452,15 +451,7 @@ public class BigThought extends Activity {
 		return Rxy;
 	}
 	//commit my ass
-	public static Bitmap applyGaussianBlur(Bitmap src) {
-		double[][] GaussianBlurConfig = new double[][] { { 1, 2, 1 },
-				{ 2, 4, 2 }, { 1, 2, 1 } };
-		ConvolutionMatrix convMatrix = new ConvolutionMatrix(3);
-		convMatrix.applyConfig(GaussianBlurConfig);
-		convMatrix.Factor = 16;
-		convMatrix.Offset = 0;
-		return ConvolutionMatrix.computeConvolution3x3(src, convMatrix);
-	}
+
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
