@@ -34,7 +34,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-//import com.androidworks.R;
 
 //import com.androidworks.R;
 
@@ -452,7 +451,7 @@ public class BigThought extends Activity {
 
 		return Rxy;
 	}
-
+	//commit my ass
 	public static Bitmap applyGaussianBlur(Bitmap src) {
 		double[][] GaussianBlurConfig = new double[][] { { 1, 2, 1 },
 				{ 2, 4, 2 }, { 1, 2, 1 } };
