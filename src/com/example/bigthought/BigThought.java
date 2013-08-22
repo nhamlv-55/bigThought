@@ -192,32 +192,8 @@ public class BigThought extends Activity {
 				e1.printStackTrace();
 			}
 
-			// String[] cutted=stringCutter(mText);
-			// String newmText="";
-			// for(int i=0;i<30;i++){
-			// if(cutted[i]!=null){
-			// newmText+="-"+cutted[i];
-			// }else{
-			// break;
-			// }
-			// }
-			// mText=newmText;
 			Bitmap bmp = postProcessing(this, thePic, mText);
 
-			// test text cutter
-			// int[] length=stringCutter(mText);
-			// String test=String.valueOf(mText.indexOf("\n"));
-			// for(int i=0; i<30; i++){
-			// if(length[i]!=-1){
-			// test+=String.valueOf(length[i])+" ";
-			// }else{
-			// break;
-			// }
-			// }
-			// Toast.makeText(this, test, Toast.LENGTH_LONG).show();
-
-			// Log.d("enter", String.valueOf(mText.indexOf("\n")));
-			//
 			// Naming by date
 			Date d = new Date();
 			CharSequence s = DateFormat
@@ -332,6 +308,7 @@ public class BigThought extends Activity {
 			// bitmap=addNoise(bitmap);
 			bitmap = addVignete(bitmap);
 			// Test frame
+			mText=stringProcessing(mText);
 			bitmap = addText(bitmap, stringCutter(mText));
 			Bitmap frame = Bitmap.createBitmap(canvasSize, canvasSize,
 					Bitmap.Config.ARGB_8888);
@@ -488,10 +465,7 @@ public class BigThought extends Activity {
 				int R = (p >> 16) & 0xff;
 				int G = (p >> 8) & 0xff;
 				int B = p & 0xff;
-				// if (true) {
-				// Log.d("value", String.valueOf(R) + String.valueOf(G)
-				// + String.valueOf(B));
-				// }
+
 				// red channel
 				int r = (rValue[R / 16 + 1] - rValue[R / 16]) * (R % 16) / 16
 						+ rValue[R / 16];
@@ -499,10 +473,7 @@ public class BigThought extends Activity {
 						+ gValue[G / 16];
 				int b = (bValue[B / 16 + 1] - bValue[B / 16]) * (B % 16) / 16
 						+ bValue[B / 16];
-				// if (true) {
-				// Log.d("code", String.valueOf(r) + String.valueOf(g)
-				// + String.valueOf(b));
-				// }
+
 				int color = Color.argb(255, r, g, b);
 				source.setPixel(i, j, color);
 			}
@@ -534,6 +505,22 @@ public class BigThought extends Activity {
 		this.sendBroadcast(mediaScanIntent);
 	}
 
+	
+	//Find and replace emoticon
+	private String stringProcessing(String s){
+		int start=s.indexOf("<3");
+		if(start!=-1){
+			String heart="\u2665";
+			//while(s.indexOf("<3", start)!=-1){
+				s=s.replaceAll("<3", heart);
+			//}
+			return s;
+		}else{
+			return s;
+		}
+		
+	}
+	
 	private String[] stringCutter(String s) {
 		int max_length = 20;
 		String[] lines = new String[10];
