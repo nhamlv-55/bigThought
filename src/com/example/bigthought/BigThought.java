@@ -50,6 +50,8 @@ public class BigThought extends Activity {
 	final int PHOTO_PICKED = 4;
 	private Uri picUri;
 	private EditText inputEditText;
+	private String mCurrentPhotoPath = "";
+	private String mCurrentDir = "";
 
 	// private Bitmap uploadPic;
 	@Override
@@ -65,6 +67,19 @@ public class BigThought extends Activity {
 			testFolder.mkdirs();
 			// VERY IMPORTANT
 			testFolder.canRead();
+			File f = new File(
+					Environment
+							.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+							+ "/BigThoughtPhoto/temp.tmp");
+			try {
+				f.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				Toast.makeText(this, "IOerror", Toast.LENGTH_LONG).show();
+			}
+
+			mCurrentDir = testFolder.getAbsolutePath();
+			// Toast.makeText(this, mCurrentDir, Toast.LENGTH_LONG).show();
 		} catch (Exception e) {
 			Toast.makeText(this, "Screw it", Toast.LENGTH_LONG).show();
 		}
@@ -152,14 +167,14 @@ public class BigThought extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 
-		if (requestCode == RESULT_LOAD_IMAGE && resultCode==RESULT_OK) {
+		if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK) {
 			// get the Uri for the captured image
 			picUri = data.getData();
 			// carry out the crop operation
 			crop(picUri);
 		}
 		// user is returning from cropping the image
-		else if (requestCode == PIC_CROP && resultCode==RESULT_OK) {
+		else if (requestCode == PIC_CROP && resultCode == RESULT_OK) {
 			// get the returned data
 			Uri picUri = Uri.fromFile(getTempFile());
 			String mText = inputEditText.getText().toString();
@@ -177,33 +192,48 @@ public class BigThought extends Activity {
 				e1.printStackTrace();
 			}
 
+			// String[] cutted=stringCutter(mText);
+			// String newmText="";
+			// for(int i=0;i<30;i++){
+			// if(cutted[i]!=null){
+			// newmText+="-"+cutted[i];
+			// }else{
+			// break;
+			// }
+			// }
+			// mText=newmText;
 			Bitmap bmp = postProcessing(this, thePic, mText);
 
+			// test text cutter
+			// int[] length=stringCutter(mText);
+			// String test=String.valueOf(mText.indexOf("\n"));
+			// for(int i=0; i<30; i++){
+			// if(length[i]!=-1){
+			// test+=String.valueOf(length[i])+" ";
+			// }else{
+			// break;
+			// }
+			// }
+			// Toast.makeText(this, test, Toast.LENGTH_LONG).show();
+
+			// Log.d("enter", String.valueOf(mText.indexOf("\n")));
+			//
 			// Naming by date
 			Date d = new Date();
 			CharSequence s = DateFormat
 					.format("MM-dd-yy hh:mm:ss", d.getTime());
 			String fileName = "/" + s.toString() + ".png";
 			String sharePic = "/toShare.png";
-			try {
-				File testFolder = new File(
-						Environment
-								.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-								+ "/BigThoughtPhoto");
-				testFolder.mkdirs();
-				// VERY IMPORTANT
-				testFolder.canRead();
-				try {
-					FileOutputStream out = new FileOutputStream(
-							testFolder.getAbsolutePath() + fileName);
-					bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
-					FileOutputStream toShare = new FileOutputStream(
-							testFolder.getAbsolutePath() + sharePic);
-					bmp.compress(Bitmap.CompressFormat.PNG, 90, toShare);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
 
+			try {
+				mCurrentPhotoPath = mCurrentDir + fileName;
+				galleryAddPic();
+				FileOutputStream out = new FileOutputStream(mCurrentDir
+						+ fileName);
+				bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
+				FileOutputStream toShare = new FileOutputStream(mCurrentDir
+						+ sharePic);
+				bmp.compress(Bitmap.CompressFormat.PNG, 90, toShare);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -216,7 +246,7 @@ public class BigThought extends Activity {
 
 		}
 
-		else if (requestCode == CAMERA_CAPTURE && resultCode==RESULT_OK) {
+		else if (requestCode == CAMERA_CAPTURE && resultCode == RESULT_OK) {
 			// get the Uri for the captured image
 			picUri = data.getData();
 			// carry out the crop operation
@@ -286,12 +316,7 @@ public class BigThought extends Activity {
 	public Bitmap postProcessing(Context mContext, Bitmap bitmap, String mText) {
 		int canvasSize = 530;
 		int margin = 15;
-		int fontSize = 30;
-		Typeface fontFormat = Typeface.create("Helvetica", Typeface.BOLD);
 		try {
-			Resources resources = mContext.getResources();
-			float scale = resources.getDisplayMetrics().density;
-
 			android.graphics.Bitmap.Config bitmapConfig = bitmap.getConfig();
 			// set default bitmap config if none
 			if (bitmapConfig == null) {
@@ -304,46 +329,15 @@ public class BigThought extends Activity {
 			// bitmap = BitmapFactory.decodeResource(this.getResources(),
 			// R.drawable.noise);
 			bitmap = colorBlend(bitmap);
-			//bitmap=addNoise(bitmap);
-			bitmap=addVignete(bitmap);
+			// bitmap=addNoise(bitmap);
+			bitmap = addVignete(bitmap);
 			// Test frame
+			bitmap = addText(bitmap, stringCutter(mText));
 			Bitmap frame = Bitmap.createBitmap(canvasSize, canvasSize,
 					Bitmap.Config.ARGB_8888);
 			Canvas canvas = new Canvas(frame);
 			canvas.drawColor(getResources().getColor(R.color.light));
 			canvas.drawBitmap(bitmap, margin, margin, null);
-			// done testing frame
-
-			// Canvas canvas = new Canvas(bitmap);
-			// new antialised Paint
-			Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-			// text color - #3D3D3D
-			paint.setColor(getResources().getColor(R.color.light));
-			// text size in pixels
-			
-			paint.setAlpha(255);
-			paint.setTypeface(fontFormat);
-			paint.setTextAlign(Align.CENTER);
-			// text shadow
-			paint.setShadowLayer(1f, 0f, 1f, Color.DKGRAY);
-
-			// draw text to the Canvas center
-			Rect bounds = new Rect();
-			paint.getTextBounds(mText, 0, mText.length(), bounds);
-			Log.d("value", String.valueOf(bounds.width())+"h: "+String.valueOf(bitmap.getHeight())+"w: "+String.valueOf(bitmap.getWidth()));
-			
-			double width_factor=180.0/bounds.width();
-			double height_factor=50.0/bounds.height();
-			double factor=Math.min(width_factor, height_factor);
-			if(factor>1){
-				factor=1;
-			}
-			Log.d("code", String.valueOf(factor)+":"+ String.valueOf(paint.getTextSize()));
-			paint.setTextSize((int) (fontSize *factor));
-			int x = (bitmap.getWidth() - bounds.width()) / 6;
-			int y = (bitmap.getHeight() + bounds.height()) / 5;
-
-			canvas.drawText(mText, 265, 175, paint);
 
 			return frame;
 		} catch (Exception e) {
@@ -386,60 +380,118 @@ public class BigThought extends Activity {
 		return bmOut;
 	}
 
+	private Bitmap addText(Bitmap source, String[] textLines) {
+		// Get the longest line
+		String max = "";
+		for (int i = 0; i < 30; i++) {
+			if (textLines[i] != null) {
+				if (textLines[i].length() > max.length()) {
+					max = textLines[i];
+				}
+			} else {
+				break;
+			}
+		}
+		int fontSize = 30;
+		Typeface fontFormat = Typeface.create("Helvetica", Typeface.BOLD);
+
+		Bitmap result = source;
+		Canvas canvas = new Canvas(result);
+		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		// text color - #3D3D3D
+		paint.setColor(getResources().getColor(R.color.light));
+		// text size in pixels
+
+		paint.setAlpha(255);
+		paint.setTypeface(fontFormat);
+		paint.setTextAlign(Align.CENTER);
+		// text shadow
+		paint.setShadowLayer(1f, 0f, 1f, Color.DKGRAY);
+
+		// draw text to the Canvas center
+		Rect bounds = new Rect();
+		paint.getTextBounds(max, 0, max.length(), bounds);
+		Log.d("value",
+				String.valueOf(bounds.width()) + "h: "
+						+ String.valueOf(source.getHeight()) + "w: "
+						+ String.valueOf(source.getWidth()));
+
+		double width_factor = 180.0 / bounds.width();
+		double height_factor = 50.0 / bounds.height();
+		double factor = Math.min(width_factor, height_factor);
+		if (factor > 1) {
+			factor = 1;
+		}
+		Log.d("code",
+				String.valueOf(factor) + ":"
+						+ String.valueOf(paint.getTextSize()));
+		paint.setTextSize((int) (fontSize * factor));
+
+		int i = 0;
+
+		float step = paint.getFontSpacing();
+		float startPosY = 175;
+
+		while (textLines[i] != null) {
+			canvas.drawText(textLines[i], 250, startPosY + i * step, paint);
+			i++;
+		}
+
+		return result;
+	}
+
 	public Bitmap addNoise(Bitmap source) {
 		// MUST create folder drawable
 		Bitmap original = source;
-        Bitmap mask = BitmapFactory.decodeResource(getResources(),drawable.noise);
-        Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),Bitmap.Config.ARGB_8888);
-        Canvas mCanvas = new Canvas(result);
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        //Useable mode: Overlay, multiply
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.OVERLAY));
-        mCanvas.drawBitmap(original, 0, 0, null);
-        mCanvas.drawBitmap(mask, 0, 0, paint);
-        paint.setXfermode(null);
-        return result;
+		Bitmap mask = BitmapFactory.decodeResource(getResources(),
+				drawable.noise);
+		Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),
+				Bitmap.Config.ARGB_8888);
+		Canvas mCanvas = new Canvas(result);
+		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		// Useable mode: Overlay, multiply
+		paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.OVERLAY));
+		mCanvas.drawBitmap(original, 0, 0, null);
+		mCanvas.drawBitmap(mask, 0, 0, paint);
+		paint.setXfermode(null);
+		return result;
 	}
 
 	public Bitmap addVignete(Bitmap source) {
 		Bitmap original = source;
-        Bitmap mask = BitmapFactory.decodeResource(getResources(),drawable.mask);
-        Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),Bitmap.Config.ARGB_8888);
-        Canvas mCanvas = new Canvas(result);
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        //Useable mode: Overlay, multiply
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.OVERLAY));
-        mCanvas.drawBitmap(original, 0, 0, null);
-        mCanvas.drawBitmap(mask, 0, 0, paint);
-        paint.setXfermode(null);
-        return result;
+		Bitmap mask = BitmapFactory.decodeResource(getResources(),
+				drawable.mask);
+		Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),
+				Bitmap.Config.ARGB_8888);
+		Canvas mCanvas = new Canvas(result);
+		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		// Useable mode: Overlay, multiply
+		paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.OVERLAY));
+		mCanvas.drawBitmap(original, 0, 0, null);
+		mCanvas.drawBitmap(mask, 0, 0, paint);
+		paint.setXfermode(null);
+		return result;
 	}
 
 	public Bitmap colorBlend(Bitmap source) {
-		int[] rValue = { 52, 53, 54, 59,
-				73, 101, 134, 164,
-				186, 205, 219, 231,
+		int[] rValue = { 52, 53, 54, 59, 73, 101, 134, 164, 186, 205, 219, 231,
 				240, 245, 249, 250, 255 };
-		int[] gValue = { 45, 51, 64, 79,
-				97, 117, 137, 155,
-				170, 182, 194, 202,
+		int[] gValue = { 45, 51, 64, 79, 97, 117, 137, 155, 170, 182, 194, 202,
 				210, 215, 218, 250, 255 };
-		int[] bValue = { 96, 102, 108, 115,
-				124, 133, 141, 146,
-				156, 159, 166,	170,
-				172, 175, 176, 177, 255 };
+		int[] bValue = { 96, 102, 108, 115, 124, 133, 141, 146, 156, 159, 166,
+				170, 172, 175, 176, 177, 255 };
 
 		for (int i = 0; i < 500; i++) {
 			for (int j = 0; j < 500; j++) {
 				int p = source.getPixel(i, j);
-				//Log.d("pointvalue", String.valueOf(p));
+				// Log.d("pointvalue", String.valueOf(p));
 				int R = (p >> 16) & 0xff;
 				int G = (p >> 8) & 0xff;
 				int B = p & 0xff;
-//				if (true) {
-//					Log.d("value", String.valueOf(R) + String.valueOf(G)
-//							+ String.valueOf(B));
-//				}
+				// if (true) {
+				// Log.d("value", String.valueOf(R) + String.valueOf(G)
+				// + String.valueOf(B));
+				// }
 				// red channel
 				int r = (rValue[R / 16 + 1] - rValue[R / 16]) * (R % 16) / 16
 						+ rValue[R / 16];
@@ -447,10 +499,10 @@ public class BigThought extends Activity {
 						+ gValue[G / 16];
 				int b = (bValue[B / 16 + 1] - bValue[B / 16]) * (B % 16) / 16
 						+ bValue[B / 16];
-//				if (true) {
-//					Log.d("code", String.valueOf(r) + String.valueOf(g)
-//							+ String.valueOf(b));
-//				}
+				// if (true) {
+				// Log.d("code", String.valueOf(r) + String.valueOf(g)
+				// + String.valueOf(b));
+				// }
 				int color = Color.argb(255, r, g, b);
 				source.setPixel(i, j, color);
 			}
@@ -471,6 +523,73 @@ public class BigThought extends Activity {
 		convMatrix.Factor = 16;
 		convMatrix.Offset = 0;
 		return ConvolutionMatrix.computeConvolution3x3(src, convMatrix);
+	}
+
+	private void galleryAddPic() {
+		Intent mediaScanIntent = new Intent(
+				Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+		File f = new File(mCurrentPhotoPath);
+		Uri contentUri = Uri.fromFile(f);
+		mediaScanIntent.setData(contentUri);
+		this.sendBroadcast(mediaScanIntent);
+	}
+
+	private String[] stringCutter(String s) {
+		int max_length = 20;
+		String[] lines = new String[10];
+		// Manual line breakdown
+		if (s.indexOf("\n") != -1) {
+			int[] enter = new int[30];
+			enter[0] = 0;
+			for (int i = 1; i < 30; i++) {
+				enter[i] = -1;
+			}
+			for (int i = 1; i < 30; i++) {
+				enter[i] = s.indexOf("\n", enter[i - 1] + 1);
+			}
+			// Break into String array
+			for (int i = 0; i < 30; i++) {
+				if (enter[i + 1] == -1) {
+					enter[i + 1] = s.length();
+					lines[i] = s.substring(enter[i], enter[i + 1]);
+					break;
+				}
+				lines[i] = s.substring(enter[i], enter[i + 1]);
+			}
+			return lines;
+		} else {
+			//
+			String[] words = s.split(" ");
+			int[] length = new int[30];
+			for (int i = 0; i < 30; i++) {
+				length[i] = -1;
+			}
+			for (int i = 0; i < words.length; i++) {
+				length[i] = words[i].length();
+			}
+			int i=0;
+			int j=0;
+			int startPos=0;
+			int endPos=0;
+			while(length[i]!=-1){
+				int l=0;
+				
+				while(l<max_length){
+					if(length[i]!=-1){
+						l+=length[i]+1;
+						i+=1;
+					}else{
+						break;
+					}
+				}
+				endPos+=l;
+				Log.d("start:end", String.valueOf(startPos)+":"+String.valueOf(endPos));
+				lines[j]=s.substring(startPos, endPos-1);
+				j++;
+				startPos=endPos;
+			}
+			return lines;
+		}
 	}
 
 	@Override
