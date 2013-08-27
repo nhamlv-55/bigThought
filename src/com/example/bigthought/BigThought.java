@@ -7,24 +7,22 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Random;
 
-import com.example.bigthought.R.drawable;
-
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -37,8 +35,18 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.facebook.FacebookRequestError;
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.model.GraphObject;
+import com.facebook.model.GraphUser;
 //import com.androidworks.R;
+//import com.facebook.samples.hellofacebook.HelloFacebookSampleActivity.PendingAction;
 
 //import com.androidworks.R;
 
@@ -52,6 +60,12 @@ public class BigThought extends Activity {
 	private EditText inputEditText;
 	private String mCurrentPhotoPath = "";
 	private String mCurrentDir = "";
+	private PendingAction pendingAction = PendingAction.NONE;
+	private static final String PERMISSION = "publish_actions";
+
+	private enum PendingAction {
+		NONE, POST_PHOTO, POST_STATUS_UPDATE
+	}
 
 	// private Bitmap uploadPic;
 	@Override
@@ -84,6 +98,39 @@ public class BigThought extends Activity {
 			Toast.makeText(this, "Screw it", Toast.LENGTH_LONG).show();
 		}
 
+		// TEST FACEBOOK
+		Session.openActiveSession(this, true, new Session.StatusCallback() {
+
+			// callback when session changes state
+			@Override
+			public void call(Session session, SessionState state,
+					Exception exception) {
+				if (session.isOpened()) {
+					Request.newMeRequest(session,
+							new Request.GraphUserCallback() {
+
+								@Override
+								public void onCompleted(GraphUser user,
+										Response response) {
+									// TODO Auto-generated method stub
+									if (user != null) {
+										String userName=user.getName();
+										inputEditText = (EditText) findViewById(R.id.inputEditText);
+										inputEditText.setText("Hello "+userName+"! Please enter your deep thought here, then Open or take a Picture using camera");
+										inputEditText.setOnClickListener(inputEditTextOnClickListener);
+									}
+
+								}
+							}).executeAsync();
+				}
+			}
+		});
+		// DONE test facebook
+
+		//Register UI element
+		Button fbButton = (Button) findViewById(R.id.fbButton);
+		fbButton.setOnClickListener(fbButtonOnClickListener);
+		
 		Button openButton = (Button) findViewById(R.id.openButton);
 		openButton.setOnClickListener(openButtonOnClickListener);
 
@@ -98,6 +145,15 @@ public class BigThought extends Activity {
 		// inputEditText.setText("Insert your deep thought here");
 	}
 
+	public OnClickListener fbButtonOnClickListener = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			performPublish(PendingAction.POST_PHOTO, false);
+		}
+	};
+	
 	public OnClickListener openButtonOnClickListener = new OnClickListener() {
 
 		@Override
@@ -167,6 +223,9 @@ public class BigThought extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 
+		Session.getActiveSession().onActivityResult(this, requestCode,
+				resultCode, data);
+
 		if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK) {
 			// get the Uri for the captured image
 			picUri = data.getData();
@@ -181,9 +240,15 @@ public class BigThought extends Activity {
 			// Bundle extras = data.getExtras();
 			// get the cropped bitmap
 			Bitmap thePic = null;
+
 			try {
 				thePic = MediaStore.Images.Media.getBitmap(
 						this.getContentResolver(), picUri);
+				Toast.makeText(
+						this,
+						String.valueOf(thePic.getHeight()) + ":"
+								+ String.valueOf(thePic.getWidth()),
+						Toast.LENGTH_LONG).show();
 			} catch (FileNotFoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -290,8 +355,11 @@ public class BigThought extends Activity {
 	}
 
 	public Bitmap postProcessing(Context mContext, Bitmap bitmap, String mText) {
-		int canvasSize = 530;
-		int margin = 15;
+		if (bitmap.getHeight() < 500) {
+			bitmap = getResizedBitmap(bitmap, 500, 500);
+		}
+		int canvasSize = 550;
+		int margin = 25;
 		try {
 			android.graphics.Bitmap.Config bitmapConfig = bitmap.getConfig();
 			// set default bitmap config if none
@@ -308,7 +376,7 @@ public class BigThought extends Activity {
 			// bitmap=addNoise(bitmap);
 			bitmap = addVignete(bitmap);
 			// Test frame
-			mText=stringProcessing(mText);
+			mText = stringProcessing(mText);
 			bitmap = addText(bitmap, stringCutter(mText));
 			Bitmap frame = Bitmap.createBitmap(canvasSize, canvasSize,
 					Bitmap.Config.ARGB_8888);
@@ -323,6 +391,22 @@ public class BigThought extends Activity {
 			return null;
 		}
 
+	}
+
+	public Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth) {
+		int width = bm.getWidth();
+		int height = bm.getHeight();
+		float scaleWidth = ((float) newWidth) / width;
+		float scaleHeight = ((float) newHeight) / height;
+		// CREATE A MATRIX FOR THE MANIPULATION
+		Matrix matrix = new Matrix();
+		// RESIZE THE BIT MAP
+		matrix.postScale(scaleWidth, scaleHeight);
+
+		// "RECREATE" THE NEW BITMAP
+		Bitmap resizedBitmap = Bitmap.createBitmap(bm, 0, 0, width, height,
+				matrix, false);
+		return resizedBitmap;
 	}
 
 	public Bitmap vintage(Bitmap source) {
@@ -421,7 +505,7 @@ public class BigThought extends Activity {
 		// MUST create folder drawable
 		Bitmap original = source;
 		Bitmap mask = BitmapFactory.decodeResource(getResources(),
-				drawable.noise);
+				R.drawable.noise);
 		Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),
 				Bitmap.Config.ARGB_8888);
 		Canvas mCanvas = new Canvas(result);
@@ -437,7 +521,7 @@ public class BigThought extends Activity {
 	public Bitmap addVignete(Bitmap source) {
 		Bitmap original = source;
 		Bitmap mask = BitmapFactory.decodeResource(getResources(),
-				drawable.mask);
+				R.drawable.mask);
 		Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),
 				Bitmap.Config.ARGB_8888);
 		Canvas mCanvas = new Canvas(result);
@@ -505,22 +589,21 @@ public class BigThought extends Activity {
 		this.sendBroadcast(mediaScanIntent);
 	}
 
-	
-	//Find and replace emoticon
-	private String stringProcessing(String s){
-		int start=s.indexOf("<3");
-		if(start!=-1){
-			String heart="\u2665";
-			//while(s.indexOf("<3", start)!=-1){
-				s=s.replaceAll("<3", heart);
-			//}
+	// Find and replace emoticon
+	private String stringProcessing(String s) {
+		int start = s.indexOf("<3");
+		if (start != -1) {
+			String heart = "\u2665";
+			// while(s.indexOf("<3", start)!=-1){
+			s = s.replaceAll("<3", heart);
+			// }
 			return s;
-		}else{
+		} else {
 			return s;
 		}
-		
+
 	}
-	
+
 	private String[] stringCutter(String s) {
 		int max_length = 20;
 		String[] lines = new String[10];
@@ -554,26 +637,27 @@ public class BigThought extends Activity {
 			for (int i = 0; i < words.length; i++) {
 				length[i] = words[i].length();
 			}
-			int i=0;
-			int j=0;
-			int startPos=0;
-			int endPos=0;
-			while(length[i]!=-1){
-				int l=0;
-				
-				while(l<max_length){
-					if(length[i]!=-1){
-						l+=length[i]+1;
-						i+=1;
-					}else{
+			int i = 0;
+			int j = 0;
+			int startPos = 0;
+			int endPos = 0;
+			while (length[i] != -1) {
+				int l = 0;
+
+				while (l < max_length) {
+					if (length[i] != -1) {
+						l += length[i] + 1;
+						i += 1;
+					} else {
 						break;
 					}
 				}
-				endPos+=l;
-				Log.d("start:end", String.valueOf(startPos)+":"+String.valueOf(endPos));
-				lines[j]=s.substring(startPos, endPos-1);
+				endPos += l;
+				Log.d("start:end",
+						String.valueOf(startPos) + ":" + String.valueOf(endPos));
+				lines[j] = s.substring(startPos, endPos - 1);
 				j++;
-				startPos=endPos;
+				startPos = endPos;
 			}
 			return lines;
 		}
@@ -586,5 +670,96 @@ public class BigThought extends Activity {
 		return true;
 	}
 
+	private void showAlert(String title, String message) {
+		new AlertDialog.Builder(this).setTitle(title).setMessage(message)
+				.setPositiveButton(R.string.ok, null).show();
+	}
+
+	private boolean hasPublishPermission() {
+		Session session = Session.getActiveSession();
+		return session != null
+				&& session.getPermissions().contains("publish_actions");
+	}
+
+	private void performPublish(PendingAction action, boolean allowNoSession) {
+		Session session = Session.getActiveSession();
+		if (session != null) {
+			pendingAction = action;
+			if (hasPublishPermission()) {
+				// We can do the action right away.
+				handlePendingAction();
+				return;
+			} else if (session.isOpened()) {
+				// We need to get new permissions, then complete the action when
+				// we get called back.
+				session.requestNewPublishPermissions(new Session.NewPermissionsRequest(
+						this, PERMISSION));
+				return;
+			}
+		}
+
+		if (allowNoSession) {
+			pendingAction = action;
+			handlePendingAction();
+		}
+	}
+
+	private void postPhoto() {
+		if (hasPublishPermission()) {
+			String path = Environment
+					.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+					+ "/BigThoughtPhoto/toShare.png";
+			Bitmap image = BitmapFactory.decodeFile(path);
+			Toast.makeText(this, String.valueOf(image.getHeight()), Toast.LENGTH_LONG).show();
+			Request request = Request.newUploadPhotoRequest(
+					Session.getActiveSession(), image, new Request.Callback() {
+						@Override
+						public void onCompleted(Response response) {
+							showPublishResult(getString(R.string.app_id),
+									response.getGraphObject(),
+									response.getError());
+						}
+					});
+			request.executeAsync();
+		} else {
+			pendingAction = PendingAction.POST_PHOTO;
+		}
+	}
+
+	@SuppressWarnings("incomplete-switch")
+	private void handlePendingAction() {
+		PendingAction previouslyPendingAction = pendingAction;
+		// These actions may re-set pendingAction if they are still pending, but
+		// we assume they
+		// will succeed.
+		pendingAction = PendingAction.NONE;
+
+		switch (previouslyPendingAction) {
+		case POST_PHOTO:
+			postPhoto();
+			break;
+		}
+	}
+
+	private void showPublishResult(String message, GraphObject result,
+			FacebookRequestError error) {
+		String title = null;
+		String alertMessage = null;
+		if (error == null) {
+			title = getString(R.string.app_name);
+			String id = result.cast(GraphObjectWithId.class).getId();
+			alertMessage = getString(R.string.app_name, message, id);
+		} else {
+			title = getString(R.string.com_facebook_internet_permission_error_message);
+			alertMessage = error.getErrorMessage();
+		}
+
+		new AlertDialog.Builder(this).setTitle(title).setMessage(alertMessage)
+				.setPositiveButton(R.string.ok, null).show();
+	}
+
+	private interface GraphObjectWithId extends GraphObject {
+		String getId();
+	}
 	//
 }

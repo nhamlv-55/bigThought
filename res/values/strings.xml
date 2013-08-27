@@ -9,4 +9,7 @@
     <string name="cameraButton">Camera</string>
 	<string name="no_photo_picked">No photo picked</string>
 	<string name="inputHint">Input your deep thought here, then press Open</string>
+	<string name="app_id">617632148258477</string>
+	<string name="ok">OK</string>
+	<string name="upToFacebook">FB</string>
 </resources>

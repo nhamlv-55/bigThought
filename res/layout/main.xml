@@ -29,6 +29,12 @@
             android:layout_height="wrap_content"
             android:text="@string/cameraButton" />
 
+        <Button
+            android:id="@+id/fbButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/upToFacebook" />
+
     </TableRow>
 
     <TableRow
@@ -40,7 +46,7 @@
             android:id="@+id/inputEditText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_span="3"
+            android:layout_span="4"
             android:text="@string/inputHint"
             android:textColor="#808080">
 
